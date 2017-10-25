@@ -16,7 +16,7 @@ const (
 	MCP23008_REG_OLAT = 0x0A
 )
 
-func relayInit(d *i2c.Device) {
+func RelayInit(d *i2c.Device) {
 	// SetAllDirection
 	err := d.WriteReg(MCP23008_REG_IODIR, []byte{0})
 	if err != nil {
@@ -30,7 +30,7 @@ func relayInit(d *i2c.Device) {
 	}
 }
 
-func relaySwitchOn(d *i2c.Device, swi byte) {
+func RelaySwitchOn(d *i2c.Device, swi byte) {
 	buff := []byte{0}
 
 	stateOn := byte(swi + 1)
@@ -39,7 +39,7 @@ func relaySwitchOn(d *i2c.Device, swi byte) {
 	d.WriteReg(MCP23008_REG_GPIO,[]byte{stateOn | buff[0]})
 }
 
-func relaySwitchOff(d *i2c.Device, swi byte) {
+func RelaySwitchOff(d *i2c.Device, swi byte) {
 	buff := []byte{0}
 
 	stateOff := byte(swi + 1) ^ 0xf
@@ -48,7 +48,7 @@ func relaySwitchOff(d *i2c.Device, swi byte) {
 	d.WriteReg(MCP23008_REG_GPIO,[]byte{stateOff & buff[0]})
 }
 
-func relaySwitchRead(d *i2c.Device, swi byte) byte {
+func RelaySwitchRead(d *i2c.Device, swi byte) byte {
 	buff := []byte{0}
 
 	bitPos := swi + 1
