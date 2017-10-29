@@ -4,6 +4,7 @@ package mcp23008
 import (
 	"golang.org/x/exp/io/i2c"
 	"math"
+	"log"
 )
 
 const (
@@ -96,5 +97,6 @@ func McpReadGpio(d *i2c.Device, gpio byte) byte {
 	mask := byte(math.Pow(2, float64(gpio)))
 
 	d.ReadReg(gpio, regValue)
+	log.Print(string(regValue[0]))
 	return (regValue[0] & mask) >> gpio
 }
