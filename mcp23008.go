@@ -96,6 +96,7 @@ func McpReadGpio(d *i2c.Device, gpio byte) byte {
 	// Set 1 to corresponding BIT of GPIO
 	log.Printf("McpReadGpio gpio param-> %b", gpio)
 	mask := byte(math.Pow(2, float64(gpio)))
+	log.Printf("Mask-> %b", mask)
 
 	d.ReadReg(gpio, regValue)
 	log.Printf("McpReadGpio gpio value -> %b", regValue[0])
