@@ -96,10 +96,11 @@ func McpReadGpio(d *i2c.Device, gpio byte) byte {
 	// Set 1 to corresponding BIT of GPIO
 	mask := byte(math.Pow(2, float64(gpio)))
 
-	err := d.ReadReg(gpioReg, regValue)
-	if err != nil {
-		panic(err)
-	}
-	log.Printf("McpReadGpio gpio <%08b> mask <%08b> value <%08b>", gpio, mask, regValue[0])
+	d.ReadReg(gpioReg, regValue)
+	//err := d.ReadReg(gpioReg, regValue)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//log.Printf("McpReadGpio gpio <%08b> mask <%08b> value <%08b>", gpio, mask, regValue[0])
 	return (regValue[0] & mask) >> gpio
 }
