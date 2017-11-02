@@ -6,7 +6,7 @@ import (
 	"math"
 )
 
-type Mcp23008 struct {
+type Module struct {
 	Device      *i2c.Device
 	Name        string `json:"name"`
 	Address     int    `json:"address"`
@@ -29,9 +29,9 @@ const (
 	olatReg    = 0x0A
 )
 
-func New(device string, name string, address int, count byte, description string) (Mcp23008, error) {
+func New(device string, name string, address int, count byte, description string) (Module, error) {
 	var err error
-	module := Mcp23008{nil, name, address, count, description, nil}
+	module := Module{nil, name, address, count, description, nil}
 	if count < 1 && count > 8 {
 		count = 8
 	}
@@ -42,7 +42,7 @@ func New(device string, name string, address int, count byte, description string
 }
 
 // Init function initialize MCP28003 after boot or restart of device
-func Init(device string, add int, module *Mcp23008) error {
+func Init(device string, add int, module *Module) error {
 
 	var err error
 
