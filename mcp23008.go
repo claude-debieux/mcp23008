@@ -36,13 +36,13 @@ func New(device string, name string, address int, count byte, description string
 		count = 8
 	}
 	if device != "" {
-		err = Init(device, module.Address, module)
+		err = Init(device, module.Address, &module)
 	}
 	return module, err
 }
 
 // Init function initialize MCP28003 after boot or restart of device
-func Init(device string, add int, module Mcp23008) error {
+func Init(device string, add int, module *Mcp23008) error {
 
 	var err error
 
@@ -55,7 +55,7 @@ func Init(device string, add int, module Mcp23008) error {
 	if module.Count > 0 && module.Count <= 8 {
 		module.Gpios = make([]int8, module.Count)
 		for g := range module.Gpios {
-			module.Gpios[g] = int8(ReadGpio(module, byte(g)))
+			ReadGpio(module, byte(g))
 		}
 	}
 
@@ -71,7 +71,7 @@ func Init(device string, add int, module Mcp23008) error {
 }
 
 // GpioReverse change state of selected GPIO other one are unchanged
-func GpioReverse(module Mcp23008, gpio byte) {
+func GpioReverse(module *Mcp23008, gpio byte) {
 	regValue := []byte{0}
 
 	// Set 1 to corresponding BIT of GPIO
@@ -85,7 +85,7 @@ func GpioReverse(module Mcp23008, gpio byte) {
 }
 
 // GpioOn set GPIO to ON/High state other one are unchanged
-func GpioOn(module Mcp23008, gpio byte) {
+func GpioOn(module *Mcp23008, gpio byte) {
 	regValue := []byte{0}
 
 	// Set 1 to corresponding BIT of GPIO
@@ -99,13 +99,13 @@ func GpioOn(module Mcp23008, gpio byte) {
 }
 
 // Set all GPIO to ON/High state
-func GpioAllOn(module Mcp23008) {
+func GpioAllOn(module *Mcp23008) {
 	// Write ON to all GPIO
 	module.Device.WriteReg(gpioReg, []byte{0xf})
 }
 
 // GpioOff set GPIO to OFF/Low state other one are unchanged
-func GpioOff(module Mcp23008, gpio byte) {
+func GpioOff(module *Mcp23008, gpio byte) {
 	regValue := []byte{0}
 
 	// Set 0 to corresponding BIT of GPIO
@@ -119,18 +119,19 @@ func GpioOff(module Mcp23008, gpio byte) {
 }
 
 // Set all GPIO to OFF/Low state
-func GpioAllOff(module Mcp23008) {
+func GpioAllOff(module *Mcp23008) {
 	// Write ON to all GPIO
 	module.Device.WriteReg(gpioReg, []byte{0x0})
 }
 
 // This function return state of selected GPIO 1 for ON/High or 0 for OFF/Low state
-func ReadGpio(module Mcp23008, gpio byte) byte {
+func ReadGpio(module *Mcp23008, gpio byte) byte {
 	regValue := []byte{0}
 
 	// Set 1 to corresponding BIT of GPIO
 	mask := byte(math.Pow(2, float64(gpio)))
 
 	module.Device.ReadReg(gpioReg, regValue)
+	module.Gpios[gpio] = int8((regValue[0] & mask) >> gpio)
 	return (regValue[0] & mask) >> gpio
 }
