@@ -3,6 +3,7 @@ package mcp23008
 
 import (
 	"golang.org/x/exp/io/i2c"
+	"log"
 	"math"
 )
 
@@ -30,6 +31,7 @@ const (
 )
 
 func New(device string, name string, address int, count byte, description string) (Mcp23008, error) {
+	log.Printf("I2C Module %s initialization...\n", name)
 	var err error
 	module := Mcp23008{nil, name, address, count, description, nil}
 	if count < 1 && count > 8 {
@@ -55,7 +57,7 @@ func Init(device string, add int, module *Mcp23008) error {
 	if module.Count > 0 && module.Count <= 8 {
 		module.Gpios = make([]int8, module.Count)
 		for g := range module.Gpios {
-			ReadGpio(module, byte(g))
+			module.Gpios[g] = int8(ReadGpio(module, byte(g)))
 		}
 	}
 
@@ -132,6 +134,5 @@ func ReadGpio(module *Mcp23008, gpio byte) byte {
 	mask := byte(math.Pow(2, float64(gpio)))
 
 	module.Device.ReadReg(gpioReg, regValue)
-	module.Gpios[gpio] = int8((regValue[0] & mask) >> gpio)
 	return (regValue[0] & mask) >> gpio
 }
