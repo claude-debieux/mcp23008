@@ -1,4 +1,4 @@
-module mcp23008
+module  github.com/get-code-ch/mcp23008
 
 go 1.14
 
