@@ -5,6 +5,7 @@ import (
 	"golang.org/x/exp/io/i2c"
 	"log"
 	"math"
+	"time"
 )
 
 type Mcp23008 struct {
@@ -17,17 +18,17 @@ type Mcp23008 struct {
 }
 
 const (
-	iodirReg   = 0x00
-	ipolReg    = 0x01
-	gpintenReg = 0x02
-	defvalReg  = 0x03
-	intconReg  = 0x04
-	ioconReg   = 0x05
-	gppuReg    = 0x06
-	intfReg    = 0x07
-	intcapReg  = 0x08
-	gpioReg    = 0x09
-	olatReg    = 0x0A
+	iodirReg   = 0x00 // I/O Direction register
+	ipolReg    = 0x01 // Input Polarity register
+	gpintenReg = 0x02 // Interrupt on change Control register
+	defvalReg  = 0x03 // Default compare register for interrupt on change
+	intconReg  = 0x04 // Interrupt control register
+	ioconReg   = 0x05 // I/O Expander configuration register
+	gppuReg    = 0x06 // GPIO Pull-up resistor register
+	intfReg    = 0x07 // Interrupt flag register
+	intcapReg  = 0x08 // Interrupt captured register
+	gpioReg    = 0x09 // Port register
+	olatReg    = 0x0A // Output Latch Register
 )
 
 func New(device string, name string, address int, count byte, description string) (Mcp23008, error) {
@@ -54,6 +55,22 @@ func Init(device string, add int, module *Mcp23008) error {
 		return err
 	}
 
+	// Set All pin direction to Output
+	if err := module.Device.WriteReg(iodirReg, []byte{0}); err != nil {
+		return err
+	}
+
+	// Disable pullup resistor for all pin
+	if err := module.Device.WriteReg(gppuReg, []byte{0}); err != nil {
+		return err
+	}
+
+	// Set INTCON to 0 for all (Interrupt comparison with previous pin value)
+	if err := module.Device.WriteReg(intconReg, []byte{0}); err != nil {
+		return err
+	}
+
+	// Reading state off all pin
 	if module.Count > 0 && module.Count <= 8 {
 		module.Gpios = make([]int8, module.Count)
 		for g := range module.Gpios {
@@ -61,15 +78,42 @@ func Init(device string, add int, module *Mcp23008) error {
 		}
 	}
 
-	// SetAllDirection
-	err = module.Device.WriteReg(iodirReg, []byte{0})
-	if err != nil {
+	return err
+}
+
+func GpioSetRead(module *Mcp23008, gpio byte) error {
+	regValue := []byte{0}
+
+	// Set 1 to corresponding BIT of GPIO
+	mask := byte(math.Pow(2, float64(gpio)))
+
+	log.Printf("GpioSetRead %v\n", mask|regValue[0])
+
+	// Set pin direction to read
+	module.Device.ReadReg(iodirReg, regValue)
+	if err := module.Device.WriteReg(iodirReg, []byte{mask | regValue[0]}); err != nil {
 		return err
 	}
 
-	// SetAllPullUp
-	err = module.Device.WriteReg(gppuReg, []byte{0})
-	return err
+	// Enable internal 100 k Ohms pull up resistor
+	module.Device.ReadReg(gppuReg, regValue)
+	if err := module.Device.WriteReg(gppuReg, []byte{mask | regValue[0]}); err != nil {
+		return err
+	}
+
+	// Reverse value of register
+	module.Device.ReadReg(ipolReg, regValue)
+	if err := module.Device.WriteReg(ipolReg, []byte{mask | regValue[0]}); err != nil {
+		return err
+	}
+
+	// Enable GPIO interrupt on change event
+	module.Device.ReadReg(gpintenReg, regValue)
+	if err := module.Device.WriteReg(gpintenReg, []byte{mask | regValue[0]}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GpioReverse change state of selected GPIO other one are unchanged
@@ -135,4 +179,23 @@ func ReadGpio(module *Mcp23008, gpio byte) byte {
 
 	module.Device.ReadReg(gpioReg, regValue)
 	return (regValue[0] & mask) >> gpio
+}
+
+// This function handle event on GPIOs
+func RegisterInterrupt(module *Mcp23008, interrupt chan byte) {
+	regValue := []byte{0}
+
+	for {
+		module.Device.ReadReg(intfReg, regValue)
+		if regValue[0] != 0 {
+			//log.Printf("Interrupt occurs GPIO %d \n", binaryToGpio(regValue) )
+			interrupt <- binaryToGpio(regValue)
+			module.Device.ReadReg(intcapReg, regValue)
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+}
+
+func binaryToGpio(registry []byte) byte {
+	return byte(math.Log10(float64(registry[0])) / math.Log10(float64(2)))
 }
