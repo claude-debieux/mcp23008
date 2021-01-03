@@ -1,4 +1,4 @@
-// This is a library to handle Microchip MCP23008 GPIO expansion IC
+// This is a library to handle Microchip MCP23008 GPIO expansion ic
 package mcp23008
 
 import (
@@ -90,9 +90,9 @@ func GpioSetRead(module *Mcp23008, gpio byte) error {
 	regValue := []byte{0}
 
 	// Set 1 to corresponding BIT of GPIO
-	mask := byte(math.Pow(2, float64(gpio)))
+	mask := byte(1) << gpio
 
-	log.Printf("GpioSetRead %v\n", mask|regValue[0])
+	//log.Printf("GpioSetRead %v\n", mask|regValue[0])
 
 	// Set pin direction to read
 	module.Device.Tx([]byte{iodirReg}, regValue)
@@ -126,7 +126,7 @@ func GpioReverse(module *Mcp23008, gpio byte) {
 	regValue := []byte{0}
 
 	// Set 1 to corresponding BIT of GPIO
-	mask := byte(math.Pow(2, float64(gpio)))
+	mask := byte(1) << gpio
 
 	// Read current state of all GPIO's
 	module.Device.Tx([]byte{gpioReg}, regValue)
@@ -140,7 +140,8 @@ func GpioOn(module *Mcp23008, gpio byte) {
 	regValue := []byte{0}
 
 	// Set 1 to corresponding BIT of GPIO
-	mask := byte(math.Pow(2, float64(gpio)))
+	mask := byte(1) << gpio
+
 
 	// Read current state of all GPIO's
 	module.Device.Tx([]byte{gpioReg}, regValue)
@@ -160,7 +161,7 @@ func GpioOff(module *Mcp23008, gpio byte) {
 	regValue := []byte{0}
 
 	// Set 0 to corresponding BIT of GPIO
-	mask := byte(math.Pow(2, float64(gpio))) ^ 0xf
+	mask := (byte(1) << gpio) ^ 0xff
 
 	// Read current state of all GPIO's
 	module.Device.Tx([]byte{gpioReg}, regValue)
