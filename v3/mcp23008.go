@@ -4,9 +4,9 @@ package mcp23008
 import (
 	"log"
 	"math"
-	"periph.io/x/periph/conn/i2c"
-	"periph.io/x/periph/conn/i2c/i2creg"
-	"periph.io/x/periph/host"
+	"periph.io/x/conn/v3/i2c"
+	"periph.io/x/conn/v3/i2c/i2creg"
+	"periph.io/x/host/v3"
 	"time"
 )
 
@@ -141,7 +141,6 @@ func GpioOn(module *Mcp23008, gpio byte) {
 
 	// Set 1 to corresponding BIT of GPIO
 	mask := byte(1) << gpio
-
 
 	// Read current state of all GPIO's
 	module.Device.Tx([]byte{gpioReg}, regValue)
